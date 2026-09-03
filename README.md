@@ -1,6 +1,6 @@
 # project-template
 
-新项目的开发约束模板，从 app-studio 通用化提取。包含 AGENTS.md 体系（含交付阶段与延后加固边界）、docs/agents 规范、docs/deferred-hardening.md 延后加固清单、docs/architecture 与 docs/adr 骨架、GitLab 接入脚本和 CI 卫生检查。
+新项目的开发约束模板。包含 AGENTS.md 体系（含交付阶段与延后加固边界）、docs/agents 规范、docs/deferred-hardening.md 延后加固清单、docs/architecture 与 docs/adr 骨架、GitLab 接入脚本和 CI 卫生检查。
 
 本仓即 skill bundle：两个 skill 以 Codex 与 Claude 兼容的格式存放在 `.agents/skills/`，可同时安装到两个平台的用户级技能目录。
 
@@ -61,10 +61,3 @@ python3 scripts/check_pointers.py
 2. 补 AGENTS.md 里的一句话项目定位。
 3. `tools/gitlab-api.sh token-check` 验证凭证链路。
 4. 需要 CI runner 时按 `docs/agents/gitlab-api-operations.md` 第 8 节创建。
-
-## 不含什么（按需从 app-studio 复制）
-
-- `.mcp.json`、`.claude/settings.json`：Expo MCP 与插件，RN 项目才需要。
-- `.agents/skills/`、`skills-lock.json`：已安装的 RN skills。
-- `.claude/skills/cn-compliance-gate`：中国上架合规门，APP 项目可复制。
-- `docs/research/`、`docs/adr/0001-*`：app-studio 自身的调研与技术选型决定。
