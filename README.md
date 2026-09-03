@@ -2,12 +2,17 @@
 
 新项目的开发约束模板，从 app-studio 通用化提取。包含 AGENTS.md 体系（含交付阶段与延后加固边界）、docs/agents 规范、docs/deferred-hardening.md 延后加固清单、docs/architecture 与 docs/adr 骨架、GitLab 接入脚本和 CI 卫生检查。
 
-本仓即 skill bundle：两个 skill（`new-project-from-idea`、`propagate-template-updates`）以 Codex 与 Claude 兼容的格式存放在 `.agents/skills/`，可同时安装到两个平台的用户级技能目录。
+本仓即 skill bundle：两个 skill 以 Codex 与 Claude 兼容的格式存放在 `.agents/skills/`，可同时安装到两个平台的用户级技能目录。
+
+| Skill | 职责 |
+| --- | --- |
+| `new-project-from-idea` | 从一句话 idea 收敛需求、确认合同、生成并验证新项目基线；`--mode integrate` 改造已有项目（只并入治理模板，不覆盖已有文件） |
+| `propagate-template-updates` | 模板规范更新后传播到所有已登记派生项目：逐文件锚点/sha 校验，fail-closed，分化项目只出差距报告 |
 
 ## 安装为 skill
 
 ```bash
-git clone <this-repo> ~/.local/share/project-template
+git clone https://github.com/sys98/project-god ~/.local/share/project-template
 ~/.local/share/project-template/install.sh
 ```
 
@@ -41,6 +46,14 @@ python3 /path/to/project-template/.agents/skills/new-project-from-idea/scripts/s
 scaffold.py 把 `template/` 拷入目标目录并替换全部占位符；`--forge github` 或 `none` 时自动移除 GitLab 专属件（`.gitlab-ci.yml`、`tools/gitlab-api.*`、`docs/agents/gitlab-api-operations.md`）。改造已有项目用 `--mode integrate`，只并入治理模板、不覆盖已有文件，冲突时拒绝。参数与分支细节见 `.agents/skills/new-project-from-idea/SKILL.md` 第 4 节。
 
 公司 GitLab host（`192.168.121.43`）和 keychain 记录（`JUNBO_GITLAB_API_TOKEN`）是公司级常量，直接保留。换环境时改 `tools/gitlab-api.sh` 顶部的默认值，或用 `GITLAB_API_BASE` / `GITLAB_KEYCHAIN_SERVICE` 环境变量覆盖。
+
+## 验证
+
+```bash
+python3 .agents/skills/new-project-from-idea/scripts/test_scaffold.py
+python3 .agents/skills/propagate-template-updates/scripts/test_apply_changeset.py
+python3 scripts/check_pointers.py
+```
 
 ## 初始化后必做
 
