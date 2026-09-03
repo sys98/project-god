@@ -1,0 +1,34 @@
+# ---------------------------------------------------------------------
+# __PROJECT_NAME__ CI（编排层）
+# 现状：docs-only 仓库，仅有卫生检查。代码落地后在 test stage 增加真实的
+# 构建与测试任务。
+# ---------------------------------------------------------------------
+
+stages:
+  - validate
+  - test
+
+default:
+  tags:
+    - ci-internal
+  interruptible: true
+
+variables:
+  GIT_DEPTH: "0"
+  NPM_CONFIG_AUDIT: "false"
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_REGISTRY: "https://registry.npmmirror.com"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+hygiene:
+  stage: validate
+  script:
+    - git diff --check "${CI_MERGE_REQUEST_DIFF_BASE_SHA:-origin/main}" "$CI_COMMIT_SHA" || git diff --check
+    - bash -n tools/gitlab-api.sh

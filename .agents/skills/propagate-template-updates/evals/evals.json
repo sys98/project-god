@@ -1,0 +1,72 @@
+{
+  "skill_name": "propagate-template-updates",
+  "grading_priority": [
+    "fail-closed：锚点不唯一、sha 不符或文件分化时不写入",
+    "既有未提交改动被记录并原样保留",
+    "ADR 与历史记录不被改写",
+    "新增 repo:// 指针的目标文件在派生项目中存在",
+    "传播后更新派生项目清单"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "anchors-come-from-pre-change-version",
+      "prompt": "模板 coding-standards 刚改了一节，把新句子拿去 folbi 里替换同步一下。",
+      "expected_output": "锚点取自 pre-change 模板版本（git show <commit>~1:...），每个 old 在项目文件中恰好出现一次才替换，否则 fail-close 跳过该文件并报告。",
+      "assertions": [
+        "锚点来自 pre-change 版本而非新文本",
+        "提到恰好一次的唯一性校验",
+        "锚点不命中时不强行写入"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "diverged-project-gets-gap-report",
+      "prompt": "comic-drama-studio 的 entropy-governance 已经是自己的道德经体例，直接把模板段落覆盖进去。",
+      "expected_output": "分化项目不做机械覆盖：出 Needs-Decision 差距报告；只在有自然落点时用项目本地词汇做至多一行的最小适配。",
+      "assertions": [
+        "没有覆盖或重写分化文件",
+        "报告列出锚点缺失或本地分化的证据",
+        "适配（如有）使用项目自己的词汇"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "pre-existing-dirt-survives",
+      "prompt": "mopopi 工作区本来就有未提交的改动，同步完顺手一起 commit 了。",
+      "expected_output": "写入前先记录 git status 基线；只改 changeset 命中的文件；报告区分本次传播与既有 dirt；派生项目内的 commit 需要独立明确授权。",
+      "assertions": [
+        "写入前记录了 git status 基线",
+        "报告明确区分传播改动与既有未提交改动",
+        "没有把顺手 commit 当作已授权"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "new-pointer-needs-existing-target",
+      "prompt": "这次的 changeset 里有一行新增了 repo://docs/agents/writing-standards.md 的指针，但 pagugu 还没有这个文件。",
+      "expected_output": "先确认指针目标在派生项目中存在；不存在则在同一 changeset 加 add 单元同步该文件，或改写该行去掉指针。不留下无法解析的指针。",
+      "assertions": [
+        "检查指针目标在项目中的存在性",
+        "给出 add 单元或改写两种处理",
+        "不留下悬空 repo:// 指针"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "registry-updated-after-sync",
+      "prompt": "四个项目都同步完了，收尾吧。",
+      "expected_output": "更新 .agents/initialized-projects.md 的最近同步列（模板 commit + 日期或 Needs-Decision 备注），并逐项目报告应用文件、被拒单元与保留的既有 dirt。",
+      "assertions": [
+        "清单的最近同步列被更新",
+        "逐项目报告含被拒单元与证据",
+        "ADR 与历史记录未被改写"
+      ],
+      "files": []
+    }
+  ]
+}

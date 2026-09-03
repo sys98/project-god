@@ -1,0 +1,7 @@
+interface:
+  display_name: "从 Idea 新建项目"
+  short_description: "收敛初步需求、适配项目模板并生成可验证的新项目"
+  default_prompt: "Use $new-project-from-idea to turn my idea into a confirmed project and generate it in my chosen folder."
+
+policy:
+  allow_implicit_invocation: true

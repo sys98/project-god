@@ -1,0 +1,7 @@
+interface:
+  display_name: "同步模板到派生项目"
+  short_description: "把模板治理变更以 fail-closed 锚点机制传播到所有已初始化项目"
+  default_prompt: "Use $propagate-template-updates to sync the latest template standards into every initialized project."
+
+policy:
+  allow_implicit_invocation: true
