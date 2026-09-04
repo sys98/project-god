@@ -184,8 +184,8 @@ if self_check; then
     cat <<EOF
 
 installed. trigger examples:
-  Claude: /new-project-from-idea 或 “我有个 idea，想基于模板新建项目”
-  Codex:  \$new-project-from-idea / \$propagate-template-updates
+  Claude: /new-project-from-idea /adopt-existing-project /propagate-template-updates
+  Codex:  \$new-project-from-idea \$adopt-existing-project \$propagate-template-updates
 registry: $(registry_path)
 EOF
 else
