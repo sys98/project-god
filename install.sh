@@ -6,7 +6,7 @@
 set -euo pipefail
 
 BUNDLE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-SKILLS=(new-project-from-idea propagate-template-updates)
+SKILLS=(new-project-from-idea propagate-template-updates adopt-existing-project)
 COPY=0
 UNINSTALL=0
 TARGETS=(claude codex)

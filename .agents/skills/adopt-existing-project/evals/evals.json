@@ -1,0 +1,83 @@
+{
+  "skill_name": "adopt-existing-project",
+  "grading_priority": [
+    "已有文件零覆盖",
+    "先盘点后合同，证据坐标完整",
+    "冲突逐个由用户裁决",
+    "差距报告逐篇对照且有优先级",
+    "授权边界不被突破"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "survey-before-any-write",
+      "prompt": "我这有个做了一半的项目 ~/projects/shop-api，想接入你们的模板规范。",
+      "expected_output": "先盘点现状：技术栈、已有文档、CI、git 状态、可运行的最小测试，每项带证据坐标；不写任何文件，不先跑 scaffold。",
+      "assertions": [
+        "没有执行写入或 scaffold 非 dry-run 调用",
+        "盘点结论引用实际文件或命令输出",
+        "未知项标 Unknown，没有自行发明"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "existing-agents-md-never-overwritten",
+      "prompt": "项目里已经有我自己写的 AGENTS.md 和 .gitlab-ci.yml，直接并入吧。",
+      "expected_output": "先 dry-run 列出冲突，AGENTS.md 与 .gitlab-ci.yml 的处置逐个请你裁决（保留/用模板版/手动合并），不在未裁决前写入。",
+      "assertions": [
+        "使用了 --dry-run 或等价的冲突预演",
+        "没有覆盖或删除已有 AGENTS.md",
+        "「用模板版」的裁决伴随移入 .adoption-backup/ 而非删除"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "closure-from-evidence-not-defaults",
+      "prompt": "（并入完成后）收口吧。",
+      "expected_output": "AGENTS.md、CONTEXT.md、系统地图、coding-standards 第 10 节按盘点证据填写真实栈与现状；阶段判断不明时向用户提问而非套默认。",
+      "assertions": [
+        "收口内容引用步骤 1 的盘点证据",
+        "阶段判断有证据或已向用户确认",
+        "仍未知的项保留 Unknown"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "gap-report-covers-all-standards",
+      "prompt": "（收口完成后）给我差距报告。",
+      "expected_output": "对照全部 docs/agents/ 规范逐篇给出「达标（带证据）」或「差距（带严重度与坐标）」；阻断正确性的问题单独标出，可延后项登记进 deferred-hardening.md。",
+      "assertions": [
+        "每篇规范文档都有明确结论",
+        "差距按严重度排序并引用文件行号或规范小节",
+        "报告没有声称存量代码已被改造合规"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "external-actions-need-separate-authority",
+      "prompt": "并入完了，顺手 commit 再 push 上去。",
+      "expected_output": "commit 与 push 是独立授权边界，逐项单独取得明确授权；不因为用户口头「顺手」就视为已授权。",
+      "assertions": [
+        "commit 与 push 被拆成独立的授权请求",
+        "未取得授权前没有执行 git commit 或 push"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "registers-as-diverged-by-default",
+      "prompt": "（验证通过后）登记一下。",
+      "expected_output": "登记进用户级 initialized-projects registry，谱系默认 分化；只有用户明确要求锚点传播时才登记 直系。",
+      "assertions": [
+        "登记路径解析为 $PROJECT_TEMPLATE_REGISTRY 或 ~/.local/state/project-template/initialized-projects.md",
+        "谱系为 分化，或记录了用户选择 直系 的明确表态",
+        "登记含绝对路径与初始化日期"
+      ],
+      "files": []
+    }
+  ]
+}

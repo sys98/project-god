@@ -48,6 +48,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--forge-project")
     parser.add_argument("--forge-url")
     parser.add_argument("--mode", choices=("new", "integrate"), default="new")
+    parser.add_argument("--on-collision", choices=("refuse", "skip"), default="refuse",
+                        help="integrate mode: refuse (default) aborts on any existing file; "
+                             "skip writes non-colliding files and reports the rest")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="print the copy/skip plan without writing anything")
     parser.add_argument("--template-root", type=Path, default=default_root)
     return parser.parse_args()
 
@@ -158,23 +163,58 @@ def unresolved_placeholders(stage: Path) -> list[str]:
     return unresolved
 
 
-def copy_stage(stage: Path, destination: Path, mode: str) -> None:
+def find_collisions(stage: Path, destination: Path) -> list[str]:
+    collisions = []
+    for path in stage.rglob("*"):
+        relative_path = path.relative_to(stage)
+        target = destination / relative_path
+        if path.is_file() and (target.exists() or target.is_symlink()):
+            collisions.append(str(relative_path))
+        elif path.is_dir() and target.exists() and not target.is_dir():
+            collisions.append(str(relative_path))
+    return sorted(collisions)
+
+
+def copy_stage(stage: Path, destination: Path, mode: str, on_collision: str, dry_run: bool) -> None:
+    collisions: list[str] = []
     if mode == "integrate":
-        collisions = []
-        for path in stage.rglob("*"):
-            relative_path = path.relative_to(stage)
-            target = destination / relative_path
-            if path.is_file() and (target.exists() or target.is_symlink()):
-                collisions.append(str(relative_path))
-            elif path.is_dir() and target.exists() and not target.is_dir():
-                collisions.append(str(relative_path))
-        collisions.sort()
-        if collisions:
+        collisions = find_collisions(stage, destination)
+        if collisions and on_collision == "refuse":
             preview = ", ".join(collisions[:5])
             suffix = "..." if len(collisions) > 5 else ""
             raise ScaffoldError(f"integration would overwrite existing files: {preview}{suffix}")
+
+    if dry_run:
+        for path in sorted(stage.rglob("*")):
+            if not path.is_file():
+                continue
+            relative = str(path.relative_to(stage))
+            print(f"  {'skip' if relative in collisions else 'copy'}: {relative}")
+        print(f"dry-run: {sum(1 for p in stage.rglob('*') if p.is_file()) - len(collisions)} to copy, "
+              f"{len(collisions)} skipped, nothing written")
+        return
+
+    skipped: list[str] = collisions
     destination.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(stage, destination, dirs_exist_ok=True)
+    if not skipped:
+        shutil.copytree(stage, destination, dirs_exist_ok=True)
+        return
+    with tempfile.TemporaryDirectory(prefix="project-template-filter-") as filtered:
+        filtered_stage = Path(filtered) / "stage"
+        shutil.copytree(stage, filtered_stage)
+        for relative in skipped:
+            target = filtered_stage / relative
+            if target.is_file() or target.is_symlink():
+                target.unlink()
+            elif target.is_dir():
+                shutil.rmtree(target)
+        for directory in sorted((p for p in filtered_stage.rglob("*") if p.is_dir()),
+                                key=lambda p: len(p.parts), reverse=True):
+            if not any(directory.iterdir()):
+                directory.rmdir()
+        shutil.copytree(filtered_stage, destination, dirs_exist_ok=True)
+    for relative in skipped:
+        print(f"skipped: {relative}")
 
 
 def main() -> int:
@@ -189,11 +229,14 @@ def main() -> int:
             unresolved = unresolved_placeholders(stage)
             if unresolved:
                 raise ScaffoldError(f"unresolved placeholders: {', '.join(unresolved)}")
-            copy_stage(stage, destination, args.mode)
+            copy_stage(stage, destination, args.mode, args.on_collision, args.dry_run)
     except (OSError, ScaffoldError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
+    if args.dry_run:
+        print(f"dry-run complete: {destination}")
+        return 0
     print(f"created: {destination}")
     print(f"mode: {args.mode}  forge: {args.forge}  project: {args.forge_project or 'none'}")
     print("next: close AGENTS.md <initialization> with the confirmed project contract")

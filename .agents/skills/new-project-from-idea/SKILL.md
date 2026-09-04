@@ -11,7 +11,7 @@ Produce a safe, minimal project baseline. The template supplies development gove
 
 Resolve the repository root from this skill's path and verify that `template/` exists. The skill may be installed through a symlink (user-level install into `~/.claude/skills` or `~/.codex/skills`); resolve the real path before deriving the root. The bundled scripts already do this via `Path(__file__).resolve()`. Read the root `README.md`, `template/AGENTS.md`, `template/CONTEXT.md`, and `template/docs/architecture/current-system-map.md`.
 
-Inspect likely parent directories and the requested destination before proposing creation. Classify the destination as missing, empty, or an existing project. Treat a non-empty destination as integration work, not a new scaffold.
+Inspect likely parent directories and the requested destination before proposing creation. Classify the destination as missing, empty, or an existing project. A non-empty destination routes to the `adopt-existing-project` skill; this skill scaffolds only missing or empty targets.
 
 Completion criterion: the live template root and one exact absolute destination are known, and every existing target path is accounted for.
 

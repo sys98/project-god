@@ -71,6 +71,43 @@ def main() -> None:
         assert (gitlab / "tools/gitlab-api.sh").is_file()
         assert "__PROJECT_NAME__" not in (gitlab / "tools/gitlab-api.sh").read_text(encoding="utf-8")
 
+        legacy = root / "legacy-app"
+        legacy.mkdir()
+        legacy_agents = legacy / "AGENTS.md"
+        legacy_agents.write_text("# my own rules\n", encoding="utf-8")
+
+        dry_run = run(
+            "--mode", "integrate",
+            "--on-collision", "skip",
+            "--dry-run",
+            "--destination", str(legacy),
+            "--name", "legacy-app",
+            "--forge", "none",
+        )
+        assert "skip: AGENTS.md" in dry_run.stdout
+        assert legacy_agents.read_text(encoding="utf-8") == "# my own rules\n"
+        assert not (legacy / "CONTEXT.md").exists()
+
+        skipped = run(
+            "--mode", "integrate",
+            "--on-collision", "skip",
+            "--destination", str(legacy),
+            "--name", "legacy-app",
+            "--forge", "none",
+        )
+        assert "skipped: AGENTS.md" in skipped.stdout
+        assert legacy_agents.read_text(encoding="utf-8") == "# my own rules\n"
+        assert (legacy / "CONTEXT.md").is_file()
+        assert "legacy-app" in (legacy / "CONTEXT.md").read_text(encoding="utf-8")
+
+        run(
+            "--mode", "integrate",
+            "--destination", str(legacy),
+            "--name", "legacy-app",
+            "--forge", "none",
+            succeeds=False,
+        )
+
     print("ok: scaffold smoke checks passed")
 
 

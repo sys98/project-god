@@ -6,8 +6,9 @@
 
 | Skill | 职责 |
 | --- | --- |
-| `new-project-from-idea` | 从一句话 idea 收敛需求、确认合同、生成并验证新项目基线；`--mode integrate` 改造已有项目（只并入治理模板，不覆盖已有文件） |
+| `new-project-from-idea` | 从一句话 idea 收敛需求、确认合同、生成并验证新项目基线；非空目标自动路由到 adopt-existing-project |
 | `propagate-template-updates` | 模板规范更新后传播到所有已登记派生项目：逐文件锚点/sha 校验，fail-closed，分化项目只出差距报告 |
+| `adopt-existing-project` | 旧项目改造：盘点现状、冲突逐个裁决、并入治理模板、按证据收口、产出优先级排序的差距报告 |
 
 ## 目录结构
 
@@ -28,6 +29,7 @@ project-template/
 │       ├── scripts/apply_changeset.py      # fail-closed 应用 changeset：锚点/sha 不满足即拒写
 │       ├── scripts/test_apply_changeset.py
 │       └── evals/evals.json
+│   （adopt-existing-project 与两者并列，结构相同：SKILL.md + agents/openai.yaml + evals，无自有脚本，复用 scaffold.py）
 └── template/                  # 治理模板本体，scaffold 的唯一拷贝源
     ├── AGENTS.md              # 单入口治理规则：阶段门控、授权边界、L1-L6 合同、fail-close
     ├── CLAUDE.md              # 只含 @AGENTS.md，Claude 入口指针
@@ -101,10 +103,10 @@ scaffold.py 把 `template/` 拷入目标目录并替换全部占位符；`--forg
 
 会话触发（安装后任意目录可用）：
 
-| 平台 | 新建/改造项目 | 传播模板更新 |
-| --- | --- | --- |
-| Claude | `/new-project-from-idea` 或“我有个 idea…” | `/propagate-template-updates` |
-| Codex | `$new-project-from-idea` | `$propagate-template-updates` |
+| 平台 | 新建项目 | 改造现有项目 | 传播模板更新 |
+| --- | --- | --- | --- |
+| Claude | `/new-project-from-idea` 或“我有个 idea…” | `/adopt-existing-project` 或“按模板规范改造这个项目” | `/propagate-template-updates` |
+| Codex | `$new-project-from-idea` | `$adopt-existing-project` | `$propagate-template-updates` |
 
 install.sh：
 
@@ -125,6 +127,8 @@ scaffold.py（skill 内部调用，也可手动）：
 | `--forge-project` | `owner/project` 或 `group/subgroup/project` |
 | `--forge-url` | gitlab 必填，必须 https |
 | `--mode` | `new`（默认）/ `integrate`（改造已有项目，冲突即拒绝） |
+| `--on-collision` | integrate 模式的冲突策略：`refuse`（默认，整体拒绝）/ `skip`（跳过并列出清单） |
+| `--dry-run` | 只打印 copy/skip 计划，不写盘；改造前用它做冲突预演 |
 | `--template-root` | 模板根覆盖，默认从脚本位置向上自动解析 |
 
 环境变量：`PROJECT_TEMPLATE_REGISTRY`（登记表位置）、`GITLAB_API_BASE` / `GITLAB_KEYCHAIN_SERVICE`（GitLab endpoint 与凭证）、`XDG_STATE_HOME`（状态目录根）。
